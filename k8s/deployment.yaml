@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perception-pipeline
+  labels:
+    app: perception-pipeline
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: perception-pipeline
+  template:
+    metadata:
+      labels:
+        app: perception-pipeline
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "9090"
+        prometheus.io/path:   "/metrics"
+    spec:
+      containers:
+      - name: detector
+        image: your-registry/perception-pipeline:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "16Gi"
+            cpu:    "4"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "8Gi"
+            cpu:    "2"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds:       10
+          failureThreshold:    3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 45   # SAM takes ~40s to load
+          periodSeconds:       5
+          failureThreshold:    6
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
