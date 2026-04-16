@@ -1,7 +1,5 @@
-# src/serving/metrics.py
-
-from prometheus_client import Counter, Histogram, Gauge, start_http_server
 import torch
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
 
 
 INFERENCE_LATENCY = Histogram(
@@ -40,11 +38,9 @@ def record_inference(latency_ms: float, n_detections: int, success: bool):
 
     if torch.cuda.is_available():
         GPU_MEMORY_USED_BYTES.set(torch.cuda.memory_allocated(0))
-        GPU_MEMORY_TOTAL_BYTES.set(
-            torch.cuda.get_device_properties(0).total_memory
-        )
+        GPU_MEMORY_TOTAL_BYTES.set(torch.cuda.get_device_properties(0).total_memory)
 
 
 def start_metrics_server(port: int = 9090):
     start_http_server(port)
-    print(f"Prometheus metrics available at :{port}/metrics")
+    print(f"Prometheus metrics at :{port}/metrics")
